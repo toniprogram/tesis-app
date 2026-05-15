@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Tesis</string>
+    <!-- Strings para la pantalla de menú -->
+    <string name="selecciona_competencia">Selecciona la competencia que deseas practicar</string>
+    <string name="volver">Volver</string>
+    <string name="seleccionar">Seleccionar</string>
+
+    <!-- Descripciones de competencias -->
+    <string name="desc_competencia1">Usa números, fracciones y medidas para contar y calcular.</string>
+    <string name="desc_competencia2">Encuentra patrones, igualdades y resuelve ecuaciones sencillas.</string>
+    <string name="desc_competencia3">Explora figuras, cuerpos geométricos, medidas y espacios.</string>
+    <string name="desc_competencia4">Organiza información en gráficos y entiende las probabilidades.</string>
+</resources>
