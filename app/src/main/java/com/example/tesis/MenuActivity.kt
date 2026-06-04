@@ -22,12 +22,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.tesis.data.CompetenciaItem
+import com.example.tesis.ui.GameViewModel
 import com.example.tesis.ui.menu.MenuViewModel
 
 @Composable
 fun MenuScreen(
     navController: NavController,
-    viewModel: MenuViewModel = viewModel()
+    viewModel: MenuViewModel = viewModel(),
+    gameViewModel: GameViewModel
 ) {
     val competenciaSeleccionada by viewModel.competenciaSeleccionada
 
@@ -40,11 +42,18 @@ fun MenuScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        // Monedas arriba a la derecha
+        MonedaDisplay(
+            gameViewModel = gameViewModel,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 40.dp, end = 16.dp)
+        )
+
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Espaciador superior
             Spacer(modifier = Modifier.height(40.dp))
 
             // Grid de 2x2 CENTRADO
@@ -82,12 +91,11 @@ fun MenuScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // CUADRO PRINCIPAL CON TODO
+            // CUADRO CON DESCRIPCIÓN
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
-                    .height(220.dp)
-                    .background(color = Color.Transparent),
+                    .height(220.dp),
                 contentAlignment = Alignment.Center
             ) {
                 // Imagen del cuadro de fondo
@@ -99,54 +107,46 @@ fun MenuScreen(
                         .fillMaxWidth()
                         .fillMaxHeight()
                 )
-                // Contenido dentro del cuadro
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    if (competenciaSeleccionada != null) {
-                        val competencia = viewModel.competencias.find { it.id == competenciaSeleccionada }
-                        if (competencia != null) {
-                            // Descripción de la competencia (SIN ICONO)
-                            Text(
-                                text = stringResource(id = competencia.descripcionResId),
-                                fontSize = 15.sp,
-                                textAlign = TextAlign.Center,
-                                color = Color.Black,
-                                fontWeight = FontWeight.Medium,
-                                lineHeight = 15.sp,
-                                modifier = Modifier.padding(horizontal = 54.dp),
-                                maxLines = 4,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
-                        }
-                    } else {
-                        // TEXTO POR DEFECTO CUANDO NO HAY SELECCIONADA
+
+                // Solo texto dentro del cuadro
+                if (competenciaSeleccionada != null) {
+                    val competencia = viewModel.competencias.find { it.id == competenciaSeleccionada }
+                    if (competencia != null) {
                         Text(
-                            text = stringResource(R.string.selecciona_competencia),
+                            text = stringResource(id = competencia.descripcionResId),
                             fontSize = 15.sp,
                             textAlign = TextAlign.Center,
                             color = Color.Black,
                             fontWeight = FontWeight.Medium,
-                            lineHeight = 15.sp,
+                            lineHeight = 18.sp,
                             modifier = Modifier.padding(horizontal = 54.dp),
                             maxLines = 4,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
+                } else {
+                    Text(
+                        text = stringResource(R.string.selecciona_competencia),
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center,
+                        color = Color.Black,
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 18.sp,
+                        modifier = Modifier.padding(horizontal = 54.dp),
+                        maxLines = 4,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
                 }
-
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Botón Seleccionar (solo si hay competencia seleccionada)
+            // ÚNICO botón Seleccionar (fuera del cuadro)
             if (competenciaSeleccionada != null) {
                 Button(
-                    onClick = { viewModel.confirmarSeleccion() },
+                    onClick = {
+                        navController.navigate("niveles/${competenciaSeleccionada}")
+                    },
                     modifier = Modifier
                         .fillMaxWidth(0.6f)
                         .height(48.dp)
