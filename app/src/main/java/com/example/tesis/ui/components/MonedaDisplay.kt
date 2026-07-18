@@ -1,4 +1,4 @@
-package com.example.tesis
+package com.example.tesis.ui.components
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -13,7 +13,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.tesis.ui.GameViewModel
+import com.example.tesis.R
+import com.example.tesis.viewmodel.GameViewModel
 
 @Composable
 fun MonedaDisplay(

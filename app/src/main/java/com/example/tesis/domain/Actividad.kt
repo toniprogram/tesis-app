@@ -4,6 +4,19 @@ import com.example.tesis.data.model.Pregunta
 
 class Actividad(private val pregunta: Pregunta) {
 
+    private val indicesBarajados: List<Int>
+    private val alternativasBarajadas: List<String>
+    private val respuestaBarajada: Int
+
+    init {
+        // Barajar los índices
+        indicesBarajados = pregunta.alternativas.indices.shuffled()
+        alternativasBarajadas = indicesBarajados.map { pregunta.alternativas[it] }
+        // Encontrar la nueva posición de la respuesta correcta
+        respuestaBarajada = indicesBarajados.indexOf(pregunta.respuestaCorrecta)
+    }
+
+
     fun obtenerEnunciado(): String = pregunta.enunciado
 
     fun obtenerAlternativas(): List<String> = pregunta.alternativas
@@ -22,4 +35,6 @@ class Actividad(private val pregunta: Pregunta) {
     fun obtenerNivel(): Int = pregunta.nivel
 
     fun obtenerCompetenciaId(): Int = pregunta.competenciaId
+
+    fun obtenerPista(): String = pregunta.pista
 }

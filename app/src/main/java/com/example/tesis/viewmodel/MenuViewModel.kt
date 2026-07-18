@@ -1,7 +1,7 @@
-package com.example.tesis.ui.menu
+package com.example.tesis.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.tesis.data.CompetenciasData
 

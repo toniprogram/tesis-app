@@ -1,4 +1,4 @@
-package com.example.tesis
+package com.example.tesis.ui.activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,8 +8,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModelProvider
 import com.example.tesis.ui.theme.TesisTheme
-import com.example.tesis.ui.GameViewModel
+import com.example.tesis.viewmodel.GameViewModel
 import androidx.navigation.compose.*
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
@@ -22,14 +23,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             TesisTheme {
                 val navController = rememberNavController()
-                val gameViewModel: GameViewModel = viewModel()
+                val gameViewModel: GameViewModel = viewModel(
+                    factory = ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+                )
 
                 NavHost(
                     navController = navController,
                     startDestination = "home"
                 ) {
                     composable("home") {
-                        inicioScreen(navController)
+                        inicioScreen(navController, gameViewModel)
                     }
                     composable("game") {
                         MenuScreen(navController, gameViewModel = gameViewModel)
@@ -52,7 +55,12 @@ class MainActivity : ComponentActivity() {
                     ) { backStackEntry ->
                         val competenciaId = backStackEntry.arguments?.getInt("competenciaId") ?: 1
                         val nivel = backStackEntry.arguments?.getInt("nivel") ?: 1
-                        PreguntaScreen(navController, competenciaId, nivel, gameViewModel = gameViewModel)
+                        PreguntaScreen(
+                            navController,
+                            competenciaId,
+                            nivel,
+                            gameViewModel = gameViewModel
+                        )
                     }
                 }
             }

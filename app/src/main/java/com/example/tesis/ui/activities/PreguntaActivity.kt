@@ -1,5 +1,6 @@
-package com.example.tesis
+package com.example.tesis.ui.activities
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,10 +21,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.tesis.ui.GameViewModel
-import com.example.tesis.ui.actividad.ActividadViewModel
+import com.example.tesis.ui.components.AnimacionMedallaObtenida
+import com.example.tesis.ui.components.MonedaDisplay
+import com.example.tesis.R
+import com.example.tesis.ui.components.TutorialOverlay
+import com.example.tesis.viewmodel.GameViewModel
+import com.example.tesis.viewmodel.ActividadViewModel
+import com.example.tesis.data.MedallasData
+import com.example.tesis.data.TextosAimara
+import com.example.tesis.data.TutorialData
+import com.example.tesis.ui.components.IdiomaButton
+import androidx.compose.animation.AnimatedVisibility as AnimatedVisibilityBox
 
 @Composable
 fun PreguntaScreen(
@@ -43,10 +54,29 @@ fun PreguntaScreen(
     val enunciado by viewModel.enunciado
     val alternativas by viewModel.alternativas
 
+    // ← AGREGA AQUÍ
+    var mostrarSolucion by remember { mutableStateOf(false) }
+    var pistaUsada by remember { mutableStateOf(false) }
+    val pista by viewModel.pista
+
+    var mostrarTutorial by remember { mutableStateOf(!gameViewModel.tutorialVisto("pregunta")) }
+
+    val enunciadoAy by viewModel.enunciadoAy
+    val pistaAy by viewModel.pistaAy
+    val esAimara by gameViewModel.esAimara
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo
+        val fondoId = when (competenciaId) {
+            1 -> R.drawable.fondo_pregunta1
+            2 -> R.drawable.fondo_pregunta2
+            3 -> R.drawable.fondo_pregunta3
+            4 -> R.drawable.fondo_pregunta4
+            else -> R.drawable.fondo_pregunta1
+        }
+
         Image(
-            painter = painterResource(id = R.drawable.fondo_pregunta1),
+            painter = painterResource(id = fondoId),
             contentDescription = "Fondo pregunta",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
@@ -82,7 +112,7 @@ fun PreguntaScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = enunciado,
+                    text = if (esAimara && enunciadoAy.isNotEmpty()) enunciadoAy else enunciado,
                     fontSize = 14.sp,
                     color = Color.Black,
                     fontWeight = FontWeight.Medium
@@ -97,7 +127,8 @@ fun PreguntaScreen(
                     painter = painterResource(id = imagenRes),
                     contentDescription = "Imagen pregunta",
                     modifier = Modifier
-                        .size(120.dp)
+                        .fillMaxWidth(0.85f)
+                        .heightIn(min = 150.dp, max = 220.dp)
                         .align(Alignment.CenterHorizontally)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -129,6 +160,7 @@ fun PreguntaScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Resultado
+            // Resultado + Botón Solución
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -150,7 +182,7 @@ fun PreguntaScreen(
                                     .padding(horizontal = 16.dp, vertical = 12.dp)
                             ) {
                                 Text(
-                                    text = "¡Bien hecho!",
+                                    text = if (esAimara) TextosAimara.bienHecho else "¡Bien hecho!",
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
@@ -159,7 +191,7 @@ fun PreguntaScreen(
 
                             IconButton(
                                 onClick = {
-                                    if (nivel < 12) {
+                                    if (nivel < 24) {
                                         navController.navigate("pregunta/$competenciaId/${nivel + 1}") {
                                             popUpTo("pregunta/$competenciaId/$nivel") { inclusive = true }
                                         }
@@ -191,7 +223,7 @@ fun PreguntaScreen(
                                 .padding(horizontal = 16.dp, vertical = 12.dp)
                         ) {
                             Text(
-                                text = "Vuelve a intentar",
+                                text = if (esAimara) TextosAimara.volverIntentar else "Vuelve a intentar",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -199,6 +231,63 @@ fun PreguntaScreen(
                         }
                     }
                 }
+
+                // Botón Solución (a la derecha, misma altura que Bien hecho)
+                if (!mostrarResultado && !pistaUsada) {
+                    val tieneMonedas = gameViewModel.monedas.value >= 10
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .background(
+                                color = if (tieneMonedas) Color(0xFFFF9800) else Color.Gray,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .then(
+                                if (tieneMonedas) Modifier.clickable {
+                                    if (gameViewModel.usarPista()) {
+                                        mostrarSolucion = true
+                                        pistaUsada = true
+                                    }
+                                } else Modifier
+                            )
+                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.drawable.moneda),
+                                contentDescription = "Moneda",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "10",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "?",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Esto solo muestra la animación si se gana una medalla
+        val medallaReciente by gameViewModel.medallaReciente
+        if (medallaReciente != null) {
+            val medalla = MedallasData.medallas.find { it.id == medallaReciente }
+            if (medalla != null) {
+                AnimacionMedallaObtenida(
+                    medalla = medalla,
+                    gameViewModel = gameViewModel,
+                    onDismiss = { gameViewModel.cerrarAnimacionMedalla() }
+                )
             }
         }
 
@@ -207,7 +296,7 @@ fun PreguntaScreen(
             onClick = { navController.popBackStack() },
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(16.dp)
+                .padding(end = 16.dp, bottom = 80.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
@@ -216,7 +305,60 @@ fun PreguntaScreen(
                 modifier = Modifier.size(32.dp)
             )
         }
+        if (mostrarTutorial) {
+            TutorialOverlay(
+                dialogos = TutorialData.dialogosPregunta,
+                onFinish = {
+                    gameViewModel.marcarTutorialVisto("pregunta")
+                    mostrarTutorial = false
+                }
+            )
+        }
+
+        IdiomaButton(
+            gameViewModel = gameViewModel,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 80.dp)
+        )
     }
+
+    if (mostrarSolucion) {
+        Dialog(onDismissRequest = { mostrarSolucion = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF2C2C2C).copy(alpha = 0.95f), RoundedCornerShape(16.dp))
+                    .padding(20.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = if (esAimara) TextosAimara.solucion else "Solución",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFD700)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (esAimara && pistaAy.isNotEmpty()) pistaAy else pista,
+                        fontSize = 14.sp,
+                        color = Color.White,
+                        lineHeight = 20.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(Color(0xFFFF9800), RoundedCornerShape(8.dp))
+                            .clickable { mostrarSolucion = false }
+                            .padding(horizontal = 24.dp, vertical = 10.dp)
+                    ) {
+                        Text("Entendido", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 @Composable

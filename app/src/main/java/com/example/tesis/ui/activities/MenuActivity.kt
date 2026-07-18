@@ -1,4 +1,4 @@
-package com.example.tesis
+package com.example.tesis.ui.activities
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,13 +17,22 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.tesis.ui.components.IdiomaButton
+import com.example.tesis.ui.components.MedalleroDisplay
+import com.example.tesis.ui.components.MonedaDisplay
+import com.example.tesis.R
+import com.example.tesis.ui.components.TutorialOverlay
 import com.example.tesis.data.CompetenciaItem
-import com.example.tesis.ui.GameViewModel
-import com.example.tesis.ui.menu.MenuViewModel
+import com.example.tesis.viewmodel.GameViewModel
+import com.example.tesis.viewmodel.MenuViewModel
+import com.example.tesis.data.TextosAimara
+import com.example.tesis.data.TutorialData
+import kotlin.collections.get
 
 @Composable
 fun MenuScreen(
@@ -32,6 +41,8 @@ fun MenuScreen(
     gameViewModel: GameViewModel
 ) {
     val competenciaSeleccionada by viewModel.competenciaSeleccionada
+    var mostrarTutorial by remember { mutableStateOf(!gameViewModel.tutorialVisto("menu")) }
+    val esAimara by gameViewModel.esAimara
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Fondo
@@ -43,15 +54,22 @@ fun MenuScreen(
         )
 
         // Monedas arriba a la derecha
-        MonedaDisplay(
-            gameViewModel = gameViewModel,
+        // Barra XP (izquierda) y Monedas (derecha)
+        Row(
             modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 40.dp, end = 16.dp)
-        )
+                .fillMaxWidth()
+                .padding(top = 36.dp, start = 12.dp, end = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            MedalleroDisplay(gameViewModel = gameViewModel)
+            MonedaDisplay(gameViewModel = gameViewModel)
+        }
 
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 120.dp),  // ← Deja espacio para la barra
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(40.dp))
@@ -113,7 +131,8 @@ fun MenuScreen(
                     val competencia = viewModel.competencias.find { it.id == competenciaSeleccionada }
                     if (competencia != null) {
                         Text(
-                            text = stringResource(id = competencia.descripcionResId),
+                            text = if (esAimara) TextosAimara.descCompetencia[competenciaSeleccionada] ?: ""
+                                    else stringResource(id = competencia.descripcionResId),
                             fontSize = 15.sp,
                             textAlign = TextAlign.Center,
                             color = Color.Black,
@@ -121,12 +140,13 @@ fun MenuScreen(
                             lineHeight = 18.sp,
                             modifier = Modifier.padding(horizontal = 54.dp),
                             maxLines = 4,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 } else {
                     Text(
-                        text = stringResource(R.string.selecciona_competencia),
+                        text = if (esAimara) TextosAimara.seleccionaCompetencia
+                                else stringResource(R.string.selecciona_competencia),
                         fontSize = 15.sp,
                         textAlign = TextAlign.Center,
                         color = Color.Black,
@@ -134,7 +154,7 @@ fun MenuScreen(
                         lineHeight = 18.sp,
                         modifier = Modifier.padding(horizontal = 54.dp),
                         maxLines = 4,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -151,7 +171,10 @@ fun MenuScreen(
                         .fillMaxWidth(0.6f)
                         .height(48.dp)
                 ) {
-                    Text(stringResource(R.string.seleccionar), fontSize = 16.sp)
+                    Text(
+                        text = if (esAimara) TextosAimara.seleccionar
+                        else stringResource(R.string.seleccionar),
+                    )
                 }
             }
 
@@ -163,7 +186,7 @@ fun MenuScreen(
             onClick = { navController.popBackStack() },
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(16.dp)
+                .padding(end = 16.dp, bottom = 80.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
@@ -172,6 +195,24 @@ fun MenuScreen(
                 modifier = Modifier.size(32.dp)
             )
         }
+        if (mostrarTutorial) {
+            TutorialOverlay(
+                dialogos = TutorialData.dialogosMenu,
+                onFinish = {
+                    gameViewModel.marcarTutorialVisto("menu")
+                    mostrarTutorial = false
+                }
+            )
+        }
+
+        // Botón idioma (abajo derecha)
+        IdiomaButton(
+            gameViewModel = gameViewModel,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 80.dp)
+        )
+
     }
 }
 
